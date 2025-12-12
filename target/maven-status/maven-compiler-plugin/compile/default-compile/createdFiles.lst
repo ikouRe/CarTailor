@@ -1,0 +1,15 @@
+com\alo\App.class
+com\alo\domain\PartType.class
+com\alo\config\ConfiguratorImpl.class
+com\alo\catalog\PartDTO.class
+com\alo\config\ConfigurationImpl.class
+com\alo\catalog\CatalogueDTO.class
+com\alo\config\Configurator.class
+com\alo\compatibility\CompatibilityChecker.class
+com\alo\compatibility\CompatibilityManager.class
+com\alo\domain\CategoryImpl.class
+com\alo\domain\Category.class
+com\alo\catalog\CatalogueLoader.class
+com\alo\domain\PartTypeImpl.class
+com\alo\compatibility\CompatibilityManagerImpl.class
+com\alo\config\Configuration.class
