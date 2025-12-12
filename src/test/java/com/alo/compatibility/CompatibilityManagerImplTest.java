@@ -1,6 +1,9 @@
 package com.alo.compatibility;
 
 import com.alo.domain.*;
+import com.alo.domain.part.PartType;
+import com.alo.domain.part.PartTypeImpl;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

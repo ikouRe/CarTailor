@@ -1,4 +1,6 @@
-package com.alo.domain;
+package com.alo.domain.part;
+
+import com.alo.domain.Category;
 
 public final class PartTypeImpl implements PartType {
 

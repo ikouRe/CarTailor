@@ -1,10 +1,15 @@
 package com.alo.config;
 
 import com.alo.compatibility.CompatibilityManagerImpl;
-import com.alo.domain.*;
-import org.junit.jupiter.api.Test;
+import com.alo.domain.Category;
+import com.alo.domain.CategoryImpl;
+import com.alo.domain.part.PartInstance;
+import com.alo.domain.part.PartType;
+import com.alo.domain.part.PartTypeImpl;
+import com.alo.service.ConfigurationService;
+import com.alo.service.ConfigurationServiceImpl;
 
-import java.util.Set;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,89 +20,75 @@ class ConfigurationImplTest {
         Category engine = new CategoryImpl("Engine");
         PartType eg100 = new PartTypeImpl("EG100", engine);
 
-        Configuration config = new ConfigurationImpl(new CompatibilityManagerImpl());
-        config.selectPart(eg100);
+        Configuration config = new ConfigurationImpl();
+        PartInstance instance = new PartInstance(eg100);
 
-        assertEquals(eg100, config.getSelectionForCategory(engine));
+        config.selectPart(instance);
+
+        assertEquals(instance, config.getSelectionForCategory(engine));
+        assertTrue(config.getSelectedParts().contains(instance));
     }
 
     @Test
-    void selectingPartTwice_shouldReplacePreviousSelection() {
+    void selectingPartTwice_shouldReplacePreviousSelectionInSameCategory() {
         Category engine = new CategoryImpl("Engine");
         PartType eg100 = new PartTypeImpl("EG100", engine);
         PartType eg133 = new PartTypeImpl("EG133", engine);
 
-        Configuration config = new ConfigurationImpl(new CompatibilityManagerImpl());
+        Configuration config = new ConfigurationImpl();
 
-        config.selectPart(eg100);
-        config.selectPart(eg133);
+        PartInstance i1 = new PartInstance(eg100);
+        PartInstance i2 = new PartInstance(eg133);
 
-        assertEquals(eg133, config.getSelectionForCategory(engine));
+        config.selectPart(i1);
+        config.selectPart(i2);
+
+        assertEquals(i2, config.getSelectionForCategory(engine));
+        assertFalse(config.getSelectedParts().contains(i1));
+        assertTrue(config.getSelectedParts().contains(i2));
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenIncompatiblePartsSelected() {
+    void unselectPart_shouldRemoveSelection() {
         Category engine = new CategoryImpl("Engine");
-        Category transmission = new CategoryImpl("Transmission");
-
         PartType eg100 = new PartTypeImpl("EG100", engine);
-        PartType ta5 = new PartTypeImpl("TA5", transmission);
 
-        CompatibilityManagerImpl manager = new CompatibilityManagerImpl();
-        manager.addIncompatibilities(eg100, Set.of(ta5));
+        Configuration config = new ConfigurationImpl();
+        PartInstance instance = new PartInstance(eg100);
 
-        Configuration config = new ConfigurationImpl(manager);
+        config.selectPart(instance);
+        config.unselectPart(engine);
 
-        config.selectPart(eg100);
-        config.selectPart(ta5);
-
-        assertFalse(config.isValid());
-    }
-
-    @Test
-    void isValid_shouldReturnFalse_whenRequirementMissing() {
-        Category engine = new CategoryImpl("Engine");
-        Category transmission = new CategoryImpl("Transmission");
-
-        PartType eh120 = new PartTypeImpl("EH120", engine);
-        PartType tc120 = new PartTypeImpl("TC120", transmission);
-
-        CompatibilityManagerImpl manager = new CompatibilityManagerImpl();
-        manager.addRequirements(eh120, Set.of(tc120));
-
-        Configuration config = new ConfigurationImpl(manager);
-        config.selectPart(eh120);
-
-        assertFalse(config.isValid());
-    }
-
-    @Test
-    void isValid_shouldReturnTrue_whenRequirementSatisfied() {
-        Category engine = new CategoryImpl("Engine");
-        Category transmission = new CategoryImpl("Transmission");
-
-        PartType eh120 = new PartTypeImpl("EH120", engine);
-        PartType tc120 = new PartTypeImpl("TC120", transmission);
-
-        CompatibilityManagerImpl manager = new CompatibilityManagerImpl();
-        manager.addRequirements(eh120, Set.of(tc120));
-
-        Configuration config = new ConfigurationImpl(manager);
-        config.selectPart(eh120);
-        config.selectPart(tc120);
-
-        assertTrue(config.isValid());
+        assertNull(config.getSelectionForCategory(engine));
+        assertTrue(config.getSelectedParts().isEmpty());
     }
 
     @Test
     void clear_shouldRemoveAllSelections() {
         Category engine = new CategoryImpl("Engine");
-        PartType eg133 = new PartTypeImpl("EG133", engine);
+        PartType eg100 = new PartTypeImpl("EG100", engine);
 
-        Configuration config = new ConfigurationImpl(new CompatibilityManagerImpl());
-        config.selectPart(eg133);
+        Configuration config = new ConfigurationImpl();
+        config.selectPart(new PartInstance(eg100));
+
         config.clear();
 
         assertTrue(config.getSelectedParts().isEmpty());
     }
+
+    @Test
+    void selectingSameCategoryTwiceKeepsOnlyOneInstance() {
+        Category engine = new CategoryImpl("Engine");
+        PartType eg100 = new PartTypeImpl("EG100", engine);
+        PartType eg133 = new PartTypeImpl("EG133", engine);
+
+        Configuration config = new ConfigurationImpl();
+        ConfigurationService service = new ConfigurationServiceImpl(new CompatibilityManagerImpl());
+
+        service.addPart(config, service.createInstance(eg100));
+        service.addPart(config, service.createInstance(eg133));
+
+        assertEquals(1, config.getSelectedParts().size());
+    }
+
 }

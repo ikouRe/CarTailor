@@ -2,7 +2,7 @@ package com.alo.compatibility;
 
 import java.util.*;
 
-import com.alo.domain.PartType;
+import com.alo.domain.part.PartType;
 
 public class CompatibilityManagerImpl implements CompatibilityManager {
 

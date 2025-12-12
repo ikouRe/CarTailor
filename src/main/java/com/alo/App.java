@@ -4,11 +4,14 @@ import com.alo.catalog.CatalogueLoader;
 import com.alo.config.Configuration;
 import com.alo.config.Configurator;
 import com.alo.domain.Category;
-import com.alo.domain.PartType;
+import com.alo.domain.part.PartInstance;
+import com.alo.domain.part.PartType;
+import com.alo.domain.part.Property;
+import com.alo.service.ConfigurationService;
+import com.alo.service.ConfigurationServiceImpl;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.file.Path;
 
 public class App {
 
@@ -16,69 +19,67 @@ public class App {
 
         public static void main(String[] args) throws Exception {
 
-                LOGGER.info("=== CAR CONFIGURATOR V1 START ===");
+                LOGGER.info("=== CAR CONFIGURATOR V2 START ===");
 
-                // 1️⃣ Charger le catalogue
-                Configurator configurator = CatalogueLoader.load(Path.of("src/resources/catalogue.json"));
+                // 1️ Charger le catalogue
+                Configurator configurator = CatalogueLoader.loadFromResources("catalogue.json");
 
-                LOGGER.info("Catalogue loaded successfully");
+                // 2️ Créer la configuration + service
+                Configuration configuration = configurator.getConfiguration();
 
-                // 2️⃣ Créer une configuration utilisateur
-                Configuration config = configurator.getConfiguration();
+                ConfigurationService service = new ConfigurationServiceImpl(configurator.getChecker());
 
-                // 3️⃣ Récupérer les catégories
+                // 3️ Récupérer catégories et types
                 Category engine = findCategory(configurator, "Engine");
                 Category transmission = findCategory(configurator, "Transmission");
 
-                // 4️⃣ Récupérer des pièces
-                PartType eg100 = findPart(configurator, engine, "EG100");
-                PartType ta5 = findPart(configurator, transmission, "TA5");
-                PartType tm5 = findPart(configurator, transmission, "TM5");
+                PartType eg100 = findType(configurator, engine, "EG100");
+                PartType ta5 = findType(configurator, transmission, "TA5");
+                PartType tm5 = findType(configurator, transmission, "TM5");
 
-                // 5️⃣ Sélection invalide
-                LOGGER.info("Selecting parts: {} + {} (expected INVALID)",
-                                eg100.getName(), ta5.getName());
+                // 4️ Créer des instances
+                PartInstance engineInstance = service.createInstance(eg100);
+                PartInstance transmissionBad = service.createInstance(ta5);
+                PartInstance transmissionGood = service.createInstance(tm5);
 
-                config.selectPart(eg100);
-                config.selectPart(ta5);
+                // 5️ Ajouter des propriétés
+                service.addProperty(engineInstance,
+                                new Property("power", "150"));
 
-                LOGGER.info("Configuration valid ? {}", config.isValid());
+                // 6️ Sélection invalide
+                service.addPart(configuration, engineInstance);
+                service.addPart(configuration, transmissionBad);
 
-                // 6️⃣ Correction
-                LOGGER.info("Fixing configuration: replacing TA5 with TM5");
+                LOGGER.info("Configuration valid ? {}",
+                                service.isValid(configuration));
 
-                config.unselectPartType(transmission);
-                config.selectPart(tm5);
+                // 7️ Correction
+                configuration.unselectPart(transmission);
+                service.addPart(configuration, transmissionGood);
 
-                LOGGER.info("Configuration valid ? {}", config.isValid());
+                LOGGER.info("Configuration valid ? {}",
+                                service.isValid(configuration));
 
-                // 7️⃣ Reset
-                LOGGER.info("Resetting configuration");
-                config.clear();
-
-                LOGGER.info("Selected parts after reset: {}",
-                                config.getSelectedParts().size());
-
-                LOGGER.info("=== CAR CONFIGURATOR V1 END ===");
+                LOGGER.info("=== CAR CONFIGURATOR V2 END ===");
         }
 
-        // ===== Helper methods (private, lisibilité du scénario) =====
+        // ===== Helpers =====
 
         private static Category findCategory(Configurator configurator, String name) {
                 return configurator.getCategories()
                                 .stream()
                                 .filter(c -> c.getName().equals(name))
                                 .findFirst()
-                                .orElseThrow(() -> new IllegalStateException("Category not found: " + name));
+                                .orElseThrow();
         }
 
-        private static PartType findPart(Configurator configurator,
+        private static PartType findType(Configurator configurator,
                         Category category,
                         String name) {
                 return configurator.getVariants(category)
                                 .stream()
                                 .filter(p -> p.getName().equals(name))
                                 .findFirst()
-                                .orElseThrow(() -> new IllegalStateException("Part not found: " + name));
+                                .orElseThrow();
         }
 }

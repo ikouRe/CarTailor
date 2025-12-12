@@ -3,62 +3,34 @@ package com.alo.config;
 import java.util.*;
 
 import com.alo.domain.Category;
-import com.alo.domain.PartType;
-import com.alo.compatibility.CompatibilityChecker;
+import com.alo.domain.part.PartInstance;
 
 public class ConfigurationImpl implements Configuration {
 
-    private final CompatibilityChecker checker;
-    private final Map<Category, PartType> selected = new HashMap<>();
+    private final Map<Category, PartInstance> selections = new HashMap<>();
 
-    public ConfigurationImpl(CompatibilityChecker checker) {
-        this.checker = checker;
+    @Override
+    public Set<PartInstance> getSelectedParts() {
+        return Set.copyOf(selections.values());
     }
 
     @Override
-    public boolean isComplete() {
-        return selected.size() >= 4; // V1 has 4 categories
+    public PartInstance getSelectionForCategory(Category category) {
+        return selections.get(category);
     }
 
     @Override
-    public boolean isValid() {
-        for (PartType p : selected.values()) {
-            // incompatibilities
-            for (PartType inc : checker.getIncompatibilities(p)) {
-                if (selected.containsValue(inc))
-                    return false;
-            }
-            // requirements
-            for (PartType req : checker.getRequirements(p)) {
-                if (!selected.containsValue(req))
-                    return false;
-            }
-        }
-        return true;
+    public void selectPart(PartInstance instance) {
+        selections.put(instance.getType().getCategory(), instance);
     }
 
     @Override
-    public Set<PartType> getSelectedParts() {
-        return Set.copyOf(selected.values());
-    }
-
-    @Override
-    public PartType getSelectionForCategory(Category category) {
-        return selected.get(category);
-    }
-
-    @Override
-    public void selectPart(PartType part) {
-        selected.put(part.getCategory(), part);
-    }
-
-    @Override
-    public void unselectPartType(Category category) {
-        selected.remove(category);
+    public void unselectPart(Category category) {
+        selections.remove(category);
     }
 
     @Override
     public void clear() {
-        selected.clear();
+        selections.clear();
     }
 }

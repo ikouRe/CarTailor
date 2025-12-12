@@ -3,7 +3,7 @@ package com.alo.config;
 import java.util.*;
 
 import com.alo.domain.Category;
-import com.alo.domain.PartType;
+import com.alo.domain.part.PartType;
 import com.alo.compatibility.CompatibilityChecker;
 import com.alo.compatibility.CompatibilityManager;
 
@@ -21,7 +21,7 @@ public class ConfiguratorImpl implements Configurator {
         this.categories = Set.copyOf(categories);
         this.variants = Map.copyOf(variants);
         this.manager = manager;
-        this.configuration = new ConfigurationImpl(manager);
+        this.configuration = new ConfigurationImpl();
     }
 
     @Override
