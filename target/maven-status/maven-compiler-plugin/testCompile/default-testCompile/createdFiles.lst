@@ -1,0 +1,7 @@
+com\alo\domain\part\PropertyTest.class
+com\alo\compatibility\CompatibilityManagerImplTest.class
+com\alo\config\ConfigurationImplTest.class
+com\alo\AppTest.class
+com\alo\service\ConfigurationServiceImplTest.class
+com\alo\catalog\CatalogueLoaderTest.class
+com\alo\domain\part\PartInstanceTest.class
